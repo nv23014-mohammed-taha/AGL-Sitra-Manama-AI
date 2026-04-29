@@ -1,252 +1,216 @@
 import numpy as np
 import torch
-from agl_core import UrbanEnvironment, MARLEngine, AgentConfig
+import torch.nn as nn
+import torch.optim as optim
+from agl_core import UrbanEnvironment
 from datetime import datetime
 import json
 
 
-def train_agl_marl():
-    print("=" * 80)
-    print("Autonomous Green Lung: Multi-Agent Reinforcement Learning Training")
-    print("=" * 80)
-    
-    print("\n[1] Initializing Urban Environment...")
-    environment = UrbanEnvironment(
-        n_filtration_agents=20,
-        n_traffic_agents=15,
-        domain_size=(10000, 5000, 500),
-        grid_resolution=10
-    )
-    
-    print(f"    - Domain Size: {environment.domain_size} meters")
-    print(f"    - Grid Resolution: {environment.grid_resolution} meters")
-    print(f"    - Grid Shape: {environment.grid_shape}")
-    print(f"    - Bio-Digital Curtains: {environment.n_filtration_agents}")
-    print(f"    - Smart Traffic Controllers: {environment.n_traffic_agents}")
-    print(f"    - Total Agents: {environment.n_agents}")
-    
-    print("\n[2] Initializing MARL Engine...")
-    marl_engine = MARLEngine(
-        environment=environment,
-        n_filtration_agents=20,
-        n_traffic_agents=15,
-        learning_rate=3e-4
-    )
-    
-    print(f"    - Agents Initialized: {len(marl_engine.agents)}")
-    print(f"    - Policy Networks: Created")
-    print(f"    - Value Networks: Created")
-    print(f"    - Optimizers: Adam (lr=3e-4)")
-    
-    print("\n[3] Configuring Multi-Objective Reward Function...")
-    print("    - Alpha (Health Priority): 0.6")
-    print("    - Beta (Economic Efficiency): 0.3")
-    print("    - Gamma (Energy Efficiency): 0.1")
-    print("    - Objective 1: Minimize Population-Weighted PM2.5 Exposure")
-    print("    - Objective 2: Maintain Traffic Latency")
-    print("    - Objective 3: Minimize Energy Consumption")
-    
-    print("\n[4] Starting Federated MARL Training...")
-    print("    - Total Timesteps: 1,000,000")
-    print("    - Evaluation Frequency: 10,000 timesteps")
-    print("    - Training Algorithm: MAPPO (Multi-Agent Proximal Policy Optimization)")
-    print("    - Centralized Training: Enabled")
-    print("    - Decentralized Execution: Enabled")
-    
-    training_results = marl_engine.train(
-        total_timesteps=1000000,
-        eval_freq=10000,
-        n_eval_episodes=10
-    )
-    
-    print("\n    - Training completed successfully")
-    
-    print("\n[5] Evaluating Trained Agents...")
-    eval_results = marl_engine.evaluate(n_episodes=100)
-    
-    print(f"    - Average Episode Reward: {eval_results['avg_reward']:.4f}")
-    print(f"    - Average PM2.5 Reduction: {eval_results['pm25_reduction']:.1%}")
-    print(f"    - Peak Pollution Event Reduction: {eval_results['peak_event_reduction']:.1%}")
-    print(f"    - Traffic Latency Change: +{eval_results['traffic_latency_change']:.1%}")
-    print(f"    - Daily Energy Consumption: {eval_results['energy_consumption']:.0f} kWh")
-    
-    print("\n[6] Comparative Performance Analysis...")
-    
-    baseline_results = {
-        'no_intervention': {
-            'avg_pm25': 28.4,
-            'peak_events': 14,
-            'traffic_latency': 12.5,
-            'energy': 0
-        },
-        'static_mitigation': {
-            'avg_pm25': 23.1,
-            'peak_events': 9,
-            'traffic_latency': 12.8,
-            'energy': 150
-        }
-    }
-    
-    agl_performance = {
-        'avg_pm25': 18.6,
-        'peak_events': 3,
-        'traffic_latency': 13.2,
-        'energy': 210
-    }
-    
-    print("\n    Baseline Comparison:")
-    print(f"    - No Intervention: {baseline_results['no_intervention']['avg_pm25']} µg/m³")
-    print(f"    - Static Mitigation: {baseline_results['static_mitigation']['avg_pm25']} µg/m³")
-    print(f"    - AGL (Proposed): {agl_performance['avg_pm25']} µg/m³")
-    
-    pm25_improvement = (baseline_results['no_intervention']['avg_pm25'] - agl_performance['avg_pm25']) / baseline_results['no_intervention']['avg_pm25']
-    print(f"\n    - AGL Improvement vs No Intervention: {pm25_improvement:.1%}")
-    
-    peak_improvement = (baseline_results['no_intervention']['peak_events'] - agl_performance['peak_events']) / baseline_results['no_intervention']['peak_events']
-    print(f"    - Peak Event Reduction: {peak_improvement:.1%}")
-    
-    print("\n[7] Agent Coordination Analysis...")
-    print("    - Filtration Agents: Coordinating Bio-Digital Curtain operations")
-    print("    - Traffic Agents: Optimizing signal timings and traffic flow")
-    print("    - Coordination Mechanism: Centralized critic with decentralized actors")
-    print("    - Communication Protocol: Implicit through shared reward signal")
-    print("    - Convergence Status: Achieved")
-    
-    print("\n[8] Robustness Testing...")
-    print("    - Shamal Wind Event Simulation: Passed")
-    print("    - Temperature Inversion Scenario: Passed")
-    print("    - Unexpected Emission Spike: Passed")
-    print("    - Traffic Congestion Event: Passed")
-    print("    - Sensor Failure Resilience: Verified")
-    
-    print("\n[9] Scalability Assessment...")
-    print("    - Current Deployment: 35 agents (20 BDCs + 15 STCs)")
-    print("    - Scalability Potential: Up to 100+ agents")
-    print("    - Computational Complexity: O(n) with decentralized execution")
-    print("    - Communication Overhead: Minimal (local observations only)")
-    print("    - Real-Time Performance: Achievable at 5-minute decision intervals")
-    
-    print("\n[10] Saving Model and Results...")
-    
-    torch.save({
-        'agents': {i: agent.policy.state_dict() for i, agent in marl_engine.agents.items()},
-        'config': {
-            'n_filtration_agents': 20,
-            'n_traffic_agents': 15,
-            'learning_rate': 3e-4
-        }
-    }, 'agl_model.pt')
-    
-    results = {
-        'timestamp': datetime.now().isoformat(),
-        'framework': 'Autonomous Green Lung (AGL)',
-        'algorithm': 'Multi-Agent Proximal Policy Optimization (MAPPO)',
-        'environment': {
-            'domain_size': [10000, 5000, 500],
-            'grid_resolution': 10,
-            'n_filtration_agents': 20,
-            'n_traffic_agents': 15,
-            'total_agents': 35
-        },
-        'training': {
-            'total_timesteps': 1000000,
-            'episodes': len(marl_engine.training_history),
-            'algorithm': 'MAPPO',
-            'learning_rate': 3e-4,
-            'gamma': 0.99,
-            'gae_lambda': 0.95
-        },
-        'performance_metrics': {
-            'avg_pm25_reduction': eval_results['pm25_reduction'],
-            'peak_event_reduction': eval_results['peak_event_reduction'],
-            'traffic_latency_change': eval_results['traffic_latency_change'],
-            'daily_energy_consumption': eval_results['energy_consumption']
-        },
-        'comparative_results': {
-            'no_intervention': baseline_results['no_intervention'],
-            'static_mitigation': baseline_results['static_mitigation'],
-            'agl_proposed': agl_performance
-        },
-        'improvements': {
-            'vs_no_intervention': f"{pm25_improvement:.1%}",
-            'peak_events_reduction': f"{peak_improvement:.1%}"
-        }
-    }
-    
-    with open('agl_results.json', 'w') as f:
-        json.dump(results, f, indent=2, default=str)
-    
-    print("    - Model weights saved to agl_model.pt")
-    print("    - Results saved to agl_results.json")
-    print("    - Training history saved")
-    
-    print("\n" + "=" * 80)
-    print("Autonomous Green Lung Training Complete")
-    print("=" * 80)
-    
-    return marl_engine, results
+class RolloutBuffer:
+    def __init__(self, n_agents, gamma=0.99, gae_lambda=0.95):
+        self.n_agents = n_agents
+        self.gamma = gamma
+        self.gae_lambda = gae_lambda
+        self.reset()
+
+    def reset(self):
+        self.obs = []
+        self.actions = []
+        self.log_probs = []
+        self.rewards = []
+        self.values = []
+        self.dones = []
+
+    def store(self, obs, actions, log_probs, rewards, values, dones):
+        self.obs.append(obs)
+        self.actions.append(actions)
+        self.log_probs.append(log_probs)
+        self.rewards.append(rewards)
+        self.values.append(values)
+        self.dones.append(dones)
+
+    def compute(self, next_values):
+        T = len(self.rewards)
+        adv = np.zeros((T, self.n_agents))
+        ret = np.zeros((T, self.n_agents))
+
+        for i in range(self.n_agents):
+            gae = 0
+            for t in reversed(range(T)):
+                next_v = next_values[i] if t == T - 1 else self.values[t + 1][i]
+                delta = self.rewards[t][i] + self.gamma * next_v * (1 - self.dones[t][i]) - self.values[t][i]
+                gae = delta + self.gamma * self.gae_lambda * (1 - self.dones[t][i]) * gae
+                adv[t, i] = gae
+
+        ret = adv + np.array(self.values)
+        return adv, ret
 
 
-def analyze_agent_behavior(marl_engine: MARLEngine):
-    print("\n[11] Analyzing Agent Behavior Patterns...")
-    
-    print("\n    Filtration Agent Strategies:")
-    print("    - Proactive Activation: Agents learn to increase fan speeds before pollution peaks")
-    print("    - Shamal Wind Response: Coordinated curtain positioning during north-westerly winds")
-    print("    - Energy Optimization: Dynamic filter activation based on pollution severity")
-    print("    - Biological Activity: Nutrient optimization for algae-based filtration")
-    
-    print("\n    Traffic Agent Strategies:")
-    print("    - Signal Timing Optimization: Dynamic adjustment based on traffic and air quality")
-    print("    - Route Diversion: Suggestions to reduce emissions from congested corridors")
-    print("    - Latency Balancing: Minimizing delays while prioritizing air quality")
-    print("    - Coordination: Implicit synchronization through shared reward signal")
-    
-    print("\n    Emergent Behaviors:")
-    print("    - Temporal Coordination: Agents learn complementary action timing")
-    print("    - Spatial Clustering: Agents focus resources on high-pollution zones")
-    print("    - Predictive Adaptation: Anticipatory actions based on wind patterns")
-    print("    - Economic-Health Trade-off: Learned balance between objectives")
+class Actor(nn.Module):
+    def __init__(self, obs_dim, act_dim):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(obs_dim, 256),
+            nn.Tanh(),
+            nn.Linear(256, 256),
+            nn.Tanh(),
+            nn.Linear(256, act_dim)
+        )
+        self.log_std = nn.Parameter(torch.zeros(act_dim))
+
+    def forward(self, x):
+        mean = torch.tanh(self.net(x))
+        std = torch.exp(self.log_std)
+        return mean, std
 
 
-def generate_deployment_recommendations(results: Dict):
-    print("\n[12] Deployment Recommendations...")
-    
-    print("\n    Phase 1 - Pilot Deployment (3-6 months):")
-    print("    - Deploy 10 Bio-Digital Curtains at industrial perimeter")
-    print("    - Integrate 5 Smart Traffic Controllers at key intersections")
-    print("    - Monitor performance and collect real-world data")
-    print("    - Validate CFD simulations against actual measurements")
-    
-    print("\n    Phase 2 - Expansion (6-12 months):")
-    print("    - Scale to full 20 BDCs and 15 STCs")
-    print("    - Integrate with existing air quality monitoring network")
-    print("    - Establish real-time data pipeline")
-    print("    - Train local operators and maintenance teams")
-    
-    print("\n    Phase 3 - Optimization (12+ months):")
-    print("    - Fine-tune reward weights based on real-world outcomes")
-    print("    - Expand to additional industrial corridors")
-    print("    - Integrate renewable energy sources for BDCs")
-    print("    - Develop public health impact assessment")
-    
-    print("\n    Estimated Outcomes:")
-    print("    - Annual PM2.5 Exposure Reduction: 34.5%")
-    print("    - Avoided Premature Deaths: 15-20 per year")
-    print("    - Healthcare Cost Savings: $2-3 million annually")
-    print("    - Economic Throughput Maintained: +5.6% traffic latency acceptable")
+class CentralCritic(nn.Module):
+    def __init__(self, global_dim):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(global_dim, 256),
+            nn.Tanh(),
+            nn.Linear(256, 256),
+            nn.Tanh(),
+            nn.Linear(256, 1)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
+class MAPPOAgent:
+    def __init__(self, obs_dim, global_dim, act_dim):
+        self.actor = Actor(obs_dim, act_dim)
+        self.critic = CentralCritic(global_dim)
+        self.opt_actor = optim.Adam(self.actor.parameters(), lr=3e-4)
+        self.opt_critic = optim.Adam(self.critic.parameters(), lr=3e-4)
+
+    def act(self, obs):
+        obs = torch.FloatTensor(obs)
+        mean, std = self.actor(obs)
+        dist = torch.distributions.Normal(mean, std)
+        action = dist.sample()
+        logp = dist.log_prob(action).sum()
+        return action.detach().numpy(), logp.detach().numpy()
+
+    def value(self, global_obs):
+        return self.critic(torch.FloatTensor(global_obs)).detach().numpy()
+
+
+def train():
+    env = UrbanEnvironment()
+    n_agents = env.n_agents
+
+    obs_dim = len(env.reset()[0])
+    global_dim = obs_dim * n_agents
+    act_dim = 2
+
+    agents = [MAPPOAgent(obs_dim, global_dim, act_dim) for _ in range(n_agents)]
+    buffer = RolloutBuffer(n_agents)
+
+    T = 200000
+    t = 0
+
+    while t < T:
+        obs = env.reset()
+        done = False
+
+        while not done:
+            actions = {}
+            logps = {}
+            vals = {}
+
+            global_state = np.concatenate(list(obs.values()))
+
+            for i in range(n_agents):
+                a, lp = agents[i].act(obs[i])
+                v = agents[i].value(global_state)[0]
+                actions[i] = a
+                logps[i] = lp
+                vals[i] = v
+
+            next_obs, rewards, dones, _ = env.step(actions)
+
+            buffer.store(
+                obs,
+                actions,
+                logps,
+                rewards,
+                vals,
+                dones
+            )
+
+            obs = next_obs
+            t += 1
+            done = all(dones.values())
+
+        next_global = np.concatenate(list(obs.values()))
+        next_vals = [agents[i].value(next_global)[0] for i in range(n_agents)]
+
+        adv, ret = buffer.compute(next_vals)
+
+        for i in range(n_agents):
+            obs_batch = torch.FloatTensor(np.array([b[i] for b in buffer.obs]))
+            act_batch = torch.FloatTensor(np.array([b[i] for b in buffer.actions]))
+            old_logp = torch.FloatTensor(np.array([b[i] for b in buffer.log_probs]))
+            adv_batch = torch.FloatTensor(adv[:, i])
+            ret_batch = torch.FloatTensor(ret[:, i])
+
+            mean, std = agents[i].actor(obs_batch)
+            dist = torch.distributions.Normal(mean, std)
+
+            new_logp = dist.log_prob(act_batch).sum(dim=1)
+
+            ratio = torch.exp(new_logp - old_logp)
+            clip = torch.clamp(ratio, 0.8, 1.2)
+
+            loss_actor = -(torch.min(ratio * adv_batch, clip * adv_batch)).mean()
+            loss_critic = ((agents[i].critic(torch.FloatTensor(np.array(buffer.obs).reshape(len(buffer.obs), -1))) - ret_batch) ** 2).mean()
+
+            agents[i].opt_actor.zero_grad()
+            loss_actor.backward()
+            agents[i].opt_actor.step()
+
+            agents[i].opt_critic.zero_grad()
+            loss_critic.backward()
+            agents[i].opt_critic.step()
+
+        buffer.reset()
+
+        if t % 5000 == 0:
+            print("step", t)
+
+    torch.save([a.actor.state_dict() for a in agents], "mappo_actor.pt")
+
+    return agents
+
+
+def evaluate(env, agents):
+    rewards = []
+    for _ in range(50):
+        obs = env.reset()
+        done = False
+        r = 0
+
+        while not done:
+            actions = {}
+            global_state = np.concatenate(list(obs.values()))
+
+            for i in range(len(agents)):
+                actions[i], _ = agents[i].act(obs[i])
+
+            obs, rew, done, _ = env.step(actions)
+            r += np.mean(list(rew.values()))
+            done = all(done.values())
+
+        rewards.append(r)
+
+    return {"avg_reward": float(np.mean(rewards))}
 
 
 if __name__ == "__main__":
-    marl_engine, results = train_agl_marl()
-    analyze_agent_behavior(marl_engine)
-    generate_deployment_recommendations(results)
-    
-    print("\n" + "=" * 80)
-    print("FINAL SUMMARY")
-    print("=" * 80)
-    print(f"PM2.5 Reduction: {results['performance_metrics']['avg_pm25_reduction']:.1%}")
-    print(f"Peak Events Reduced: {results['performance_metrics']['peak_event_reduction']:.1%}")
-    print(f"Traffic Latency Impact: +{results['performance_metrics']['traffic_latency_change']:.1%}")
-    print(f"Daily Energy Use: {results['performance_metrics']['daily_energy_consumption']:.0f} kWh")
-    print("=" * 80)
+    env = UrbanEnvironment()
+    agents = train()
+    print(evaluate(env, agents))
