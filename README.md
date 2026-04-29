@@ -42,7 +42,7 @@ Requirements
 •	Ray 2.0+
 
 ### Setup
-git clone https://github.com/yourusername/AGL-Research.git
+git clone https://github.com/nv23014-mohammed-taha/AGL-Research.git
 cd AGL-Research
 pip install -r requirements.txt
 
