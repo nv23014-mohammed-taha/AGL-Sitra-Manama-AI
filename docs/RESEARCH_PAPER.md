@@ -1,7 +1,9 @@
 # Autonomous Green Lung Urban AI: A Human-Centric Approach to Dynamic Atmospheric Mitigation
 
 **Author:** Mohammed Taha
+
 **Email:** nv23014@ncst.edu.bh
+
 **Affiliation:** Department of Computer Science, Nasser Centre for Science and Technology (NCST), Kingdom of Bahrain
 
 ## Abstract
